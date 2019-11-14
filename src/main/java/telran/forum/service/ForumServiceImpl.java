@@ -15,8 +15,8 @@ import telran.forum.dto.DatePeriodDto;
 import telran.forum.dto.NewCommentDto;
 import telran.forum.dto.NewPostDto;
 import telran.forum.dto.PostDto;
-import telran.forum.exeptions.PostNotFoundException;
-import telran.forum.exeptions.WrongDateFormatException;
+import telran.forum.exceptions.PostNotFoundException;
+import telran.forum.exceptions.WrongDateFormatException;
 import telran.forum.model.Comment;
 import telran.forum.model.Post;
 
@@ -128,7 +128,6 @@ public class ForumServiceImpl implements ForumService {
 
 	@Override
 	public Iterable<CommentDto> findAllPostComments(String id) {
-		// TODO Auto-generated method stub
 		Post post = forumRepository.findById(id).orElseThrow(() -> new PostNotFoundException(id));
 		Set<Comment> comments = post.getComments();
 		return comments.stream().map(this::convertToCommentDto).collect(Collectors.toList());
@@ -136,9 +135,10 @@ public class ForumServiceImpl implements ForumService {
 
 	@Override
 	public Iterable<CommentDto> findAllPostCommentsByAuthor(String id, String author) {
-		// TODO Auto-generated method stub
 		Post post = forumRepository.findById(id).orElseThrow(() -> new PostNotFoundException(id));
-		Stream<Comment> comments = post.getComments().stream().filter(p -> author.equals(p.getUser()));
+		Stream<Comment> comments = post.getComments()
+				.stream()
+				.filter(p -> author.equals(p.getUser()));
 		return comments.map(this::convertToCommentDto).collect(Collectors.toList());
 	}
 	

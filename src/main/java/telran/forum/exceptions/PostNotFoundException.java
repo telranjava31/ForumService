@@ -1,4 +1,4 @@
-package telran.forum.exeptions;
+package telran.forum.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

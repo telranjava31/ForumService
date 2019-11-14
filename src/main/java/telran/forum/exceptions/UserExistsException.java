@@ -1,10 +1,10 @@
-package telran.forum.exeptions;
+package telran.forum.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(value = HttpStatus.BAD_REQUEST, reason = "wrong date format")
-public class WrongDateFormatException extends RuntimeException {
+@ResponseStatus(code = HttpStatus.CONFLICT, reason = "user exists")
+public class UserExistsException extends RuntimeException {
 
 	/**
 	 * 
