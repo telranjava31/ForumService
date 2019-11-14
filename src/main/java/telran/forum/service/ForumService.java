@@ -1,8 +1,8 @@
 package telran.forum.service;
 
-import java.time.LocalDate;
 import java.util.List;
 
+import telran.forum.dto.CommentDto;
 import telran.forum.dto.DatePeriodDto;
 import telran.forum.dto.NewCommentDto;
 import telran.forum.dto.NewPostDto;
@@ -26,5 +26,9 @@ public interface ForumService {
 	Iterable<PostDto> findPostsByTags(List<String> tags);
 	
 	Iterable<PostDto> findPostsCreatedBetweenDates(DatePeriodDto datePeriodDto);
+	
+	Iterable<CommentDto> findAllPostComments(String id);
+	
+	Iterable<CommentDto> findAllPostCommentsByAuthor(String id, String author);
 
 }

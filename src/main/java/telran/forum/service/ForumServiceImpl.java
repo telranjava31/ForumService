@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,7 +15,8 @@ import telran.forum.dto.DatePeriodDto;
 import telran.forum.dto.NewCommentDto;
 import telran.forum.dto.NewPostDto;
 import telran.forum.dto.PostDto;
-import telran.forum.exeptions.PostNotFoundExeption;
+import telran.forum.exeptions.PostNotFoundException;
+import telran.forum.exeptions.WrongDateFormatException;
 import telran.forum.model.Comment;
 import telran.forum.model.Post;
 
@@ -34,20 +36,20 @@ public class ForumServiceImpl implements ForumService {
 
 	@Override
 	public PostDto getPost(String id) {
-		Post post = forumRepository.findById(id).orElseThrow(() -> new PostNotFoundExeption(id));
+		Post post = forumRepository.findById(id).orElseThrow(() -> new PostNotFoundException(id));
 		return convertToPostDto(post);
 	}
 
 	@Override
 	public PostDto removePost(String id) {
-		Post post = forumRepository.findById(id).orElseThrow(() -> new PostNotFoundExeption(id));
+		Post post = forumRepository.findById(id).orElseThrow(() -> new PostNotFoundException(id));
 		forumRepository.delete(post);
 		return convertToPostDto(post);
 	}
 
 	@Override
 	public PostDto updatePost(NewPostDto postUpdateDto, String id) {
-		Post post = forumRepository.findById(id).orElseThrow(() -> new PostNotFoundExeption(id));
+		Post post = forumRepository.findById(id).orElseThrow(() -> new PostNotFoundException(id));
 		String content = postUpdateDto.getContent();
 		if (content != null) {
 			post.setContent(content);
@@ -77,7 +79,7 @@ public class ForumServiceImpl implements ForumService {
 
 	@Override
 	public PostDto addComment(String id, String author, NewCommentDto newCommentDto) {
-		Post post = forumRepository.findById(id).orElseThrow(() -> new PostNotFoundExeption(id));
+		Post post = forumRepository.findById(id).orElseThrow(() -> new PostNotFoundException(id));
 		post.addComment(convertToComment(author, newCommentDto.getMessage()));
 		forumRepository.save(post);
 		return convertToPostDto(post);
@@ -103,19 +105,7 @@ public class ForumServiceImpl implements ForumService {
 				.build();
 	}
 	
-	private Comment convertToComment(String author, String message) {
-		return new Comment(author, message);
-	}
 	
-	private CommentDto convertToCommentDto(Comment comment) {
-		return CommentDto.builder()
-				.user(comment.getUser())
-				.message(comment.getMessage())
-				.dateCreated(comment.getDateCreated())
-				.likes(comment.getLikes())
-				.build();
-	}
-
 	@Override
 	public Iterable<PostDto> findPostsByTags(List<String> tags) {
 		return forumRepository.findByTagsIn(tags)
@@ -135,5 +125,35 @@ public class ForumServiceImpl implements ForumService {
 			throw new WrongDateFormatException();
 		}
 	}
+
+	@Override
+	public Iterable<CommentDto> findAllPostComments(String id) {
+		// TODO Auto-generated method stub
+		Post post = forumRepository.findById(id).orElseThrow(() -> new PostNotFoundException(id));
+		Set<Comment> comments = post.getComments();
+		return comments.stream().map(this::convertToCommentDto).collect(Collectors.toList());
+	}
+
+	@Override
+	public Iterable<CommentDto> findAllPostCommentsByAuthor(String id, String author) {
+		// TODO Auto-generated method stub
+		Post post = forumRepository.findById(id).orElseThrow(() -> new PostNotFoundException(id));
+		Stream<Comment> comments = post.getComments().stream().filter(p -> author.equals(p.getUser()));
+		return comments.map(this::convertToCommentDto).collect(Collectors.toList());
+	}
+	
+	private Comment convertToComment(String author, String message) {
+		return new Comment(author, message);
+	}
+	
+	private CommentDto convertToCommentDto(Comment comment) {
+		return CommentDto.builder()
+				.user(comment.getUser())
+				.message(comment.getMessage())
+				.dateCreated(comment.getDateCreated())
+				.likes(comment.getLikes())
+				.build();
+	}
+
 
 }

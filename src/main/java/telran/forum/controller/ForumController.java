@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import telran.forum.dto.CommentDto;
 import telran.forum.dto.DatePeriodDto;
 import telran.forum.dto.NewCommentDto;
 import telran.forum.dto.NewPostDto;
@@ -68,6 +69,16 @@ public class ForumController {
 	public Iterable<PostDto> findPostsByPeriod(@RequestBody DatePeriodDto datePeriodDto) {
 		return service.findPostsCreatedBetweenDates(datePeriodDto);
 		
+	}
+	
+	@GetMapping("/post/{id}/comments")
+	public Iterable<CommentDto> findAllPostComments(@PathVariable String id){
+		return service.findAllPostComments(id);
+	}
+	
+	@GetMapping("/post/{id}/author/{author}/comments")
+	public Iterable<CommentDto> findAllPostCommentsByAuthor(@PathVariable String id, @PathVariable String author) {
+		return service.findAllPostCommentsByAuthor(id, author);
 	}
 
 }
