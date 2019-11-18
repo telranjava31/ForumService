@@ -103,7 +103,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 		}
 		UserAccount userAccount = accountRepository.findById(login)
 				.orElseThrow(() -> new UserNotFoundException(login));
-		userAccount.removeRole(role);
+		userAccount.addRole(role);
 		return userAccount.getRoles();
 	}
 
@@ -114,7 +114,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 		}
 		UserAccount userAccount = accountRepository.findById(login)
 				.orElseThrow(() -> new UserNotFoundException(login));
-		userAccount.addRole(role);
+		userAccount.removeRole(role);
 		return userAccount.getRoles();
 	}
 	
