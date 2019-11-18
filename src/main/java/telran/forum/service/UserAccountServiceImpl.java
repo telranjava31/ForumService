@@ -16,6 +16,7 @@ import telran.forum.dto.UserProfileDto;
 import telran.forum.exceptions.ForbiddenException;
 import telran.forum.exceptions.UserAuthenticationException;
 import telran.forum.exceptions.UserExistsException;
+import telran.forum.exceptions.UserNotFoundException;
 import telran.forum.model.UserAccount;
 
 @Service
@@ -67,32 +68,78 @@ public class UserAccountServiceImpl implements UserAccountService {
 
 	@Override
 	public UserProfileDto removeUser(String token) {
-		// TODO Auto-generated method stub
-		return null;
+		UserCredentials userCredentials = accountConfiguration.tokenDecode(token);
+		UserAccount userAccount = accountRepository.findById(userCredentials.getLogin())
+				.orElseThrow(UserAuthenticationException::new);
+		if (!BCrypt.checkpw(userCredentials.getPassword(), userAccount.getPassword())) {
+			throw new ForbiddenException();
+		}
+		accountRepository.delete(userAccount);
+		return userAccountToUserProfileDto(userAccount);
 	}
 
 	@Override
 	public UserProfileDto editUser(UserEditDto userEditDto, String token) {
-		// TODO Auto-generated method stub
-		return null;
+		UserCredentials userCredentials = accountConfiguration.tokenDecode(token);
+		UserAccount userAccount = accountRepository.findById(userCredentials.getLogin())
+				.orElseThrow(UserAuthenticationException::new);
+		if (!BCrypt.checkpw(userCredentials.getPassword(), userAccount.getPassword())) {
+			throw new ForbiddenException();
+		}
+		if (userEditDto.getFirstName() != null) {
+			userAccount.setFirstName(userEditDto.getFirstName());
+		}
+		if (userEditDto.getLastName() != null) {
+			userAccount.setLastName(userEditDto.getLastName());
+		}
+		accountRepository.save(userAccount);
+		return userAccountToUserProfileDto(userAccount);
 	}
 
 	@Override
 	public Set<String> addRole(String login, String role, String token) {
-		// TODO Auto-generated method stub
-		return null;
+		if (!isAdmin(token)) {
+			throw new ForbiddenException();
+		}
+		UserAccount userAccount = accountRepository.findById(login)
+				.orElseThrow(() -> new UserNotFoundException(login));
+		userAccount.removeRole(role);
+		return userAccount.getRoles();
 	}
 
 	@Override
 	public Set<String> removeRole(String login, String role, String token) {
-		// TODO Auto-generated method stub
-		return null;
+		if (!isAdmin(token)) {
+			throw new ForbiddenException();
+		}
+		UserAccount userAccount = accountRepository.findById(login)
+				.orElseThrow(() -> new UserNotFoundException(login));
+		userAccount.addRole(role);
+		return userAccount.getRoles();
+	}
+	
+	private boolean isAdmin(String token) {
+		UserCredentials userCredentials = accountConfiguration.tokenDecode(token);
+		UserAccount userAccount = accountRepository.findById(userCredentials.getLogin())
+				.orElseThrow(UserAuthenticationException::new);
+		if (!BCrypt.checkpw(userCredentials.getPassword(), userAccount.getPassword())) {
+			throw new ForbiddenException();
+		}
+		return userAccount.getRoles().contains("Administrator");
 	}
 
 	@Override
 	public void changePassword(String token, String password) {
-		// TODO Auto-generated method stub
-		
+		UserCredentials userCredentials = accountConfiguration.tokenDecode(token);
+		UserAccount userAccount = accountRepository.findById(userCredentials.getLogin())
+				.orElseThrow(UserAuthenticationException::new);
+		if (!BCrypt.checkpw(userCredentials.getPassword(), userAccount.getPassword())) {
+			throw new ForbiddenException();
+		}
+		String hashPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+		userAccount.setPassword(hashPassword);
+		userAccount.setExpDate(LocalDateTime.now().plusDays(accountConfiguration.getExpPeriod()));
+		accountRepository.save(userAccount);
 	}
 
 }
