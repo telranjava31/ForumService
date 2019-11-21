@@ -5,7 +5,6 @@ import java.security.Principal;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -41,8 +40,17 @@ public class AuthentificationFilter implements Filter {
 		String path =request.getServletPath();
 		String method = request.getMethod();
 		String auth = request.getHeader("Authorization");
-		UserCredentials userCredentials = null;
+//		System.out.println(request.getSession().getId());
 		if (!checkPointCut(path, method)) {
+			String sessionId = request.getSession().getId();
+			if (sessionId != null && auth == null) {
+				UserAccount user = accountConfiguration.getUser(sessionId);
+				if (user != null) {
+					chain.doFilter(new WrapperRequest(request, user.getLogin()), response);
+					return;
+				}
+			}
+			UserCredentials userCredentials = null;
 			try {
 				userCredentials = accountConfiguration.tokenDecode(auth);
 			} catch (Exception e) {
@@ -59,6 +67,7 @@ public class AuthentificationFilter implements Filter {
 				response.sendError(403, "Password not valid");
 				return;
 			}
+			accountConfiguration.addUser(sessionId, userAccount);
 			chain.doFilter(new WrapperRequest(request, userCredentials.getLogin()), response);
 			return;
 		}
